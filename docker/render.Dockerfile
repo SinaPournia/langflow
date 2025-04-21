@@ -1,33 +1,30 @@
-# Use official lightweight Python image
-FROM python:3.10-slim
+FROM python:3.11-slim
 
 # Set environment variables
-ENV POETRY_VERSION=1.7.1 \
-    PYTHONUNBUFFERED=1 \
-    LANGFLOW_PORT=${PORT:-7860}
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-# Install dependencies for Poetry and build tools
-RUN apt-get update \
-  && apt-get install -y curl build-essential git \
-  && curl -sSL https://install.python-poetry.org | python3 - \
-  && ln -s /root/.local/bin/poetry /usr/local/bin/poetry \
-  && apt-get clean
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Set working directory
+# Set work directory
 WORKDIR /app
 
-# Copy only poetry config first (to leverage Docker cache)
-COPY pyproject.toml poetry.lock* /app/
-
-# Install dependencies
-RUN poetry config virtualenvs.create false \
-  && poetry install --no-interaction --no-ansi
-
-# Copy the rest of the app
+# Copy project files
 COPY . /app
 
-# Expose the default Render port
-EXPOSE ${PORT}
+# Install pip and upgrade it
+RUN pip install --upgrade pip
 
-# Run the app
-ENTRYPOINT ["python", "-m", "langflow", "run"]
+# Install Python dependencies from pyproject.toml
+RUN pip install --no-cache-dir ".[all,local,couchbase,cassio,clickhouse-connect,nv-ingest,postgresql]"
+
+# Expose default port
+EXPOSE 7860
+
+# Start the app
+CMD ["python", "-m", "langflow", "run"]
