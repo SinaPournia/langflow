@@ -1,8 +1,7 @@
 FROM langflowai/langflow:latest
 
 # Install extra packages
-RUN pip install --no-cache-dir yt-dlp webvtt-py && \
-    chmod +x /app/data/.local/bin/yt-dlp /app/data/.local/bin/webvtt || true
+RUN pip install --no-cache-dir yt-dlp webvtt-py
 
-# Set entrypoint to run Langflow
-ENTRYPOINT ["python", "-m", "langflow", "run"]
+# Set entrypoint to run Langflow with updated PATH
+ENTRYPOINT ["/bin/bash", "-c", "export PATH=/app/data/.local/bin:$PATH && python -m langflow run"]
