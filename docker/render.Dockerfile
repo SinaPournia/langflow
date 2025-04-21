@@ -1,9 +1,10 @@
 FROM langflowai/langflow:latest
 
-# Add custom tools
-RUN pip install --user yt-dlp webvtt-py
+# Install extra packages system-wide
+RUN pip install --no-cache-dir yt-dlp webvtt-py
 
-# Make sure the scripts can be used globally
-ENV PATH="/app/data/.local/bin:$PATH"
+# Optional: sanity check
+RUN yt-dlp --version && webvtt --help
 
+# Set entrypoint to run Langflow
 ENTRYPOINT ["python", "-m", "langflow", "run"]
